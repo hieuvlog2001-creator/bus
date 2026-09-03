@@ -1,9 +1,11 @@
-name: Build Bus Traffic Fever IPA
+name: Build Bus Traffic Fever - Unsigned IPA
 
 on:
   workflow_dispatch:
   push:
-    branches: [ "main", "master" ]
+    branches:
+      - main
+      - master
 
 permissions:
   contents: read
@@ -11,42 +13,63 @@ permissions:
 jobs:
   build:
     runs-on: macos-15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_26.0.app || true
-
-      - name: Show toolchain
+      - name: Show Xcode
         run: |
           xcodebuild -version
+          xcode-select -p
           xcodebuild -showsdks
+
+      - name: Clean
+        run: |
+          rm -rf build Payload BusTrafficFever-unsigned.ipa
 
       - name: Build unsigned iOS app
         run: |
+          set -e
           xcodebuild \
             -project BusTrafficFever.xcodeproj \
             -scheme BusTrafficFever \
             -configuration Release \
             -sdk iphoneos \
-            -derivedDataPath build \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
+            -derivedDataPath "$PWD/build" \
+            CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            DEVELOPMENT_TEAM="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
             clean build
 
-      - name: Package unsigned IPA
+      - name: Verify app
         run: |
-          mkdir -p Payload
-          cp -R build/Build/Products/Release-iphoneos/BusTrafficFever.app Payload/
-          /usr/bin/zip -r BusTrafficFever-unsigned.ipa Payload
-          rm -rf Payload
+          set -e
+          APP="build/Build/Products/Release-iphoneos/BusTrafficFever.app"
+          test -d "$APP"
+          echo "Unsigned app found:"
+          ls -la "$APP"
+          echo "Code signature check (unsigned is expected):"
+          codesign -dv "$APP" 2>&1 || true
 
-      - name: Upload IPA
+      - name: Create unsigned IPA for eSign
+        run: |
+          set -e
+          rm -rf Payload
+          mkdir Payload
+          cp -R "build/Build/Products/Release-iphoneos/BusTrafficFever.app" Payload/BusTrafficFever.app
+          /usr/bin/zip -qry BusTrafficFever-unsigned.ipa Payload
+          rm -rf Payload
+          ls -lh BusTrafficFever-unsigned.ipa
+
+      - name: Upload unsigned IPA
         uses: actions/upload-artifact@v4
         with:
-          name: BusTrafficFever-IPA
+          name: BusTrafficFever-unsigned-IPA
           path: BusTrafficFever-unsigned.ipa
           if-no-files-found: error
+          retention-days: 14
