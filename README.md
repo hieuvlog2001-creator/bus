@@ -1,25 +1,24 @@
-# Bus Traffic Fever
+# Bus Traffic Fever - Unsigned IPA
 
-A from-scratch SwiftUI prototype inspired by the supplied Bus Traffic Fever screenshots.
+This project builds an **unsigned iOS IPA** specifically so it can be signed later with an external signing tool such as eSign.
 
-## Included
-- Portrait iOS app
-- Loading screen
-- Home screen
-- Hard Level 8 screen
-- Bus sorting gameplay
-- Colored buses and passenger track
-- Power-up buttons
-- GitHub Actions workflow that builds an unsigned IPA
+## GitHub Actions
 
-## GitHub build
-1. Create a new GitHub repository.
-2. Upload all files from this project.
-3. Push to `main`.
-4. Open **Actions → Build Bus Traffic Fever IPA**.
-5. Download the `BusTrafficFever-IPA` artifact.
+1. Upload this project to the repository.
+2. Open **Actions**.
+3. Run **Build Bus Traffic Fever - Unsigned IPA**.
+4. When the workflow is green, open the completed run.
+5. Under **Artifacts**, download:
+   `BusTrafficFever-unsigned-IPA`
+6. The ZIP artifact contains:
+   `BusTrafficFever-unsigned.ipa`
 
-### Important
-The workflow creates an **unsigned IPA**. iOS requires code signing for installation on a real device. You can sign the app with your Apple Developer certificate/profile or a sideloading/signing service before installing.
+The IPA is intentionally unsigned. Do not add Apple certificates or provisioning profiles to the workflow.
 
-No external packages or npm/node are required.
+## eSign
+
+Import `BusTrafficFever-unsigned.ipa` into your own eSign/signing workflow and sign it with your own certificate/profile.
+
+## Important
+
+An unsigned IPA is not directly installable on iPhone. It must be signed with a valid certificate/provisioning setup before installation.
